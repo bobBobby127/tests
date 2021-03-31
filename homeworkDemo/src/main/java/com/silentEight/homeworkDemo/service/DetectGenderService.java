@@ -1,8 +1,9 @@
 package com.silentEight.homeworkDemo.service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -12,10 +13,12 @@ public class DetectGenderService {
 
 	
 	
-	public Stream<String> fileToStringStream (String fileName) {
+	public Stream<String> urlToStringStream(URL fileUrl) {
 		Stream<String> stream = Stream.empty();
+		//stream = Files.lines(Paths.get(fileName));	
+		
 		try {
-			stream = Files.lines(Paths.get(fileName));
+			stream = new BufferedReader( new InputStreamReader(fileUrl.openStream()) ).lines();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -25,7 +28,7 @@ public class DetectGenderService {
 	
 	
 	// get gender VARIANT 1 - based on 1st name token 
-	public String getGenderVariant1 (String name, String maleTokensFileName, String femaleTokensFileName) {
+	public String getGenderVariant1 (String name, URL maleTokensUrl, URL femaleTokensUrl) {
 
 		String gender = "INCONCLUSIVE";
 		var wrapper = new Object() {
@@ -40,13 +43,11 @@ public class DetectGenderService {
 		}
 
 		if(wrapper.nameFirstToken != null) {
-			System.out.println(wrapper.nameFirstToken);
-			//
-			this.fileToStringStream(maleTokensFileName).filter(line -> line.equalsIgnoreCase(wrapper.nameFirstToken)).findFirst().ifPresent(action -> {
+			this.urlToStringStream(maleTokensUrl).filter(line -> line.equalsIgnoreCase(wrapper.nameFirstToken)).findFirst().ifPresent(action -> {
 				wrapper.isMale = true;
 			});
 			
-			this.fileToStringStream(femaleTokensFileName).filter(line -> line.equalsIgnoreCase(wrapper.nameFirstToken)).findFirst().ifPresent(action -> {
+			this.urlToStringStream(femaleTokensUrl).filter(line -> line.equalsIgnoreCase(wrapper.nameFirstToken)).findFirst().ifPresent(action -> {
 				wrapper.isFemale = true;
 			});
 		}
@@ -57,13 +58,15 @@ public class DetectGenderService {
 			gender = "FEMALE";
 		}
 		
+		
+		System.out.println("[printOut]: Result for name '" + name + "' is '" + gender + "', first name token was '" + nameTokens[0] + "'");
 		return gender;
 	}
 	
 	
 	
 	// get gender VARIANT 1 - based on 1st name token 
-	public String getGenderVariant2(String name, String maleTokensFileName, String femaleTokensFileName) {
+	public String getGenderVariant2(String name, URL maleTokensUrl, URL femaleTokensUrl) {
 		String gender = "INCONCLUSIVE";
 		var wrapper = new Object() {
 			short maleCount = 0;
@@ -72,11 +75,11 @@ public class DetectGenderService {
 		String nameTokens[] = name.split(" ");
 		
 		for(String nameToken : nameTokens) {
-			this.fileToStringStream(maleTokensFileName).filter(line -> line.equalsIgnoreCase(nameToken)).findFirst().ifPresent(action -> {
+			this.urlToStringStream(maleTokensUrl).filter(line -> line.equalsIgnoreCase(nameToken)).findFirst().ifPresent(action -> {
 				wrapper.maleCount++;
 			});
 			
-			this.fileToStringStream(femaleTokensFileName).filter(line -> line.equalsIgnoreCase(nameToken)).findFirst().ifPresent(action -> {
+			this.urlToStringStream(femaleTokensUrl).filter(line -> line.equalsIgnoreCase(nameToken)).findFirst().ifPresent(action -> {
 				wrapper.femaleCount++;
 			});
 		}
@@ -87,8 +90,7 @@ public class DetectGenderService {
 			gender = "FEMALE";
 		}
 		
-		System.out.println(wrapper.maleCount);
-		System.out.println(wrapper.femaleCount);
+		System.out.println("[printOut]: Result for name '" + name + "' is '" + gender + "', number of MALE TOKENS:" + wrapper.maleCount + ", number of FEMALE TOKENS:" + wrapper.femaleCount);
 		return gender;
 	}
 

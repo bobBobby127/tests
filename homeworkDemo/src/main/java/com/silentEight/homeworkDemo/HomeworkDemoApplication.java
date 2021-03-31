@@ -10,6 +10,11 @@ public class HomeworkDemoApplication {
 
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(HomeworkDemoApplication.class, args);
+		
+		/*
+		var resource = ResourceUtils.getURL("classpath:static/maleTokens.txt");
+		new BufferedReader( new InputStreamReader(resource.openStream()) ).lines().forEach(System.out::println);
+		*/
 	}
 
 }
